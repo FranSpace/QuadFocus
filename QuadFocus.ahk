@@ -5,10 +5,11 @@
 #Include lib\cJson.ahk
 #Include lib\DataManager.ahk
 
-global AppName  := "QuadFocus"
-global MainWin  := ""
-global PopupWin := ""
-global DataMgr  := DataManager()
+global AppName      := "QuadFocus"
+global MainWin      := ""
+global PopupWin     := ""
+global SettingsWin  := ""
+global DataMgr      := DataManager()
 
 OnExit(ExitHandler)
 SetupTray()
@@ -158,9 +159,50 @@ DoLock() {
     DllCall("LockWorkStation")
 }
 
-; ── Settings window (stub — implemented in Task 10) ──────────────────────────
+; ── Settings window ──────────────────────────────────────────────────────────
 ShowSettings() {
-    MsgBox("Settings coming soon.")
+    global SettingsWin
+    if (IsSet(SettingsWin) && SettingsWin != "" && WinExist("ahk_id " . SettingsWin.Hwnd)) {
+        WinActivate("ahk_id " . SettingsWin.Hwnd)
+        return
+    }
+    SettingsWin := Gui("-MinimizeBox -MaximizeBox", "QuadFocus — 设置")
+    SettingsWin.Show("w480 h320")
+
+    local wv := WebView2.create(SettingsWin.Hwnd)
+    wv.Navigate("file:///" . StrReplace(A_ScriptDir, "\", "/") . "/ui/settings.html")
+    wv.add_NavigationCompleted((*) => {
+        local cfg := JSON.stringify(DataMgr.config)
+        wv.ExecuteScript("onAHKMessage({type:'loadConfig',config:" . cfg . "})")
+    })
+    wv.add_WebMessageReceived((sender, args) => HandleSettingsMessage(args, wv, SettingsWin))
+}
+
+HandleSettingsMessage(args, wv, win) {
+    global SettingsWin
+    local msg := JSON.parse(args.TryGetWebMessageAsString())
+    if (msg["action"] == "browsePath") {
+        local path := FileSelect("S", DataMgr.dataPath,
+                                 "选择 data.json 位置", "JSON 文件 (*.json)")
+        if (path != "")
+            wv.ExecuteScript("onAHKMessage({type:'pathSelected',path:'" . StrReplace(path, "\", "/") . "'})")
+    }
+    if (msg["action"] == "saveConfig") {
+        DataMgr.SaveConfig(msg["config"])
+        ApplyAutoStart(msg["config"]["autoStart"])
+        ; Re-register hotkey with new binding
+        try {
+            local hk := (DataMgr.config.Has("hotkey") && DataMgr.config["hotkey"] != "")
+                        ? DataMgr.config["hotkey"] : "^!Space"
+            Hotkey(hk, (*) => ToggleMain())
+        }
+        win.Destroy()
+        SettingsWin := ""
+    }
+    if (msg["action"] == "cancel") {
+        win.Destroy()
+        SettingsWin := ""
+    }
 }
 
 ; ── Onboarding window ────────────────────────────────────────────────────────

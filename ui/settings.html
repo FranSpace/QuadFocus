@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>QuadFocus — 设置</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="onboarding-body">
+  <h1>设置</h1>
+  <div class="setting-row">
+    <label>数据文件路径</label>
+    <div class="setting-input-row">
+      <input type="text" id="data-path">
+      <button onclick="browsePath()">浏览...</button>
+    </div>
+  </div>
+  <div class="setting-row">
+    <label>快捷键</label>
+    <input type="text" id="hotkey" readonly placeholder="点击后按下组合键">
+    <small>点击输入框后按下你想要的组合键</small>
+  </div>
+  <div class="setting-row">
+    <label class="checkbox-label">
+      <input type="checkbox" id="auto-start">
+      开机自动启动 QuadFocus
+    </label>
+  </div>
+  <div class="setting-actions">
+    <button id="btn-save" onclick="saveSettings()">保存</button>
+    <button id="btn-cancel" onclick="cancelSettings()">取消</button>
+  </div>
+  <script src="js/settings.js"></script>
+</body>
+</html>

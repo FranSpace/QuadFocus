@@ -134,3 +134,17 @@ button { padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; f
 }
 .step button:hover { opacity: 0.85; }
 .step label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* Settings */
+.setting-row { margin-bottom: 20px; }
+.setting-row > label { display: block; font-size: 12px; color: var(--text-muted);
+                       margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.setting-input-row { display: flex; gap: 8px; }
+.setting-input-row input { flex: 1; }
+.setting-row small { display: block; margin-top: 4px; font-size: 11px; color: var(--text-muted); }
+.checkbox-label { display: flex !important; align-items: center; gap: 8px;
+                  font-size: 14px; color: var(--text); text-transform: none !important;
+                  letter-spacing: normal !important; cursor: pointer; }
+.setting-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
+#btn-cancel { background: var(--border); color: var(--text); }
+#btn-save   { background: var(--blue);   color: white; }
