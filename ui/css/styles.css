@@ -1,0 +1,65 @@
+/* ui/css/styles.css */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2d3e;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --blue: #3b82f6;
+  --yellow: #f59e0b;
+  --green: #10b981;
+  --red: #ef4444;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 100vh;
+  gap: 1px;
+  background: var(--border);
+}
+
+.quadrant {
+  background: var(--surface);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.quadrant h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Status indicators */
+.status-active  { color: var(--blue); }
+.status-todo    { color: var(--text-muted); }
+.status-paused  { color: var(--yellow); }
+.status-done    { color: var(--green); text-decoration: line-through; opacity: 0.6; }
+
+/* Deadline urgency */
+.urgency-critical { color: var(--red); }
+.urgency-week     { color: var(--yellow); }
+.urgency-next     { color: var(--green); }
+.urgency-far      { color: var(--text-muted); }
+
+/* Popup */
+.popup-body { padding: 24px; height: auto; overflow: auto; }
+.popup-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+button { padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; }
+#btn-skip { background: var(--border); color: var(--text); }
+#btn-lock { background: var(--blue); color: white; }
