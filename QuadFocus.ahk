@@ -168,6 +168,7 @@ ShowSettings() {
     }
     SettingsWin := Gui("-MinimizeBox -MaximizeBox", "QuadFocus — 设置")
     SettingsWin.Show("w480 h320")
+    SettingsWin.OnEvent("Close", (*) => (SettingsWin := ""))
 
     local wv := WebView2.create(SettingsWin.Hwnd)
     wv.Navigate("file:///" . StrReplace(A_ScriptDir, "\", "/") . "/ui/settings.html")
@@ -188,14 +189,16 @@ HandleSettingsMessage(args, wv, win) {
             wv.ExecuteScript("onAHKMessage({type:'pathSelected',path:'" . StrReplace(path, "\", "/") . "'})")
     }
     if (msg["action"] == "saveConfig") {
+        ; Capture old hotkey before overwriting config
+        local oldHk := (DataMgr.config.Has("hotkey") && DataMgr.config["hotkey"] != "")
+                       ? DataMgr.config["hotkey"] : "^!Space"
         DataMgr.SaveConfig(msg["config"])
         ApplyAutoStart(msg["config"]["autoStart"])
-        ; Re-register hotkey with new binding
-        try {
-            local hk := (DataMgr.config.Has("hotkey") && DataMgr.config["hotkey"] != "")
-                        ? DataMgr.config["hotkey"] : "^!Space"
-            Hotkey(hk, (*) => ToggleMain())
-        }
+        ; Deregister old hotkey, register new one
+        local newHk := (DataMgr.config.Has("hotkey") && DataMgr.config["hotkey"] != "")
+                       ? DataMgr.config["hotkey"] : "^!Space"
+        try Hotkey(oldHk, "Off")
+        try Hotkey(newHk, (*) => ToggleMain())
         win.Destroy()
         SettingsWin := ""
     }
