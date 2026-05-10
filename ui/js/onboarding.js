@@ -2,11 +2,14 @@ let ahkHotkey = '^!Space'
 
 document.getElementById('hotkey').addEventListener('keydown', e => {
   e.preventDefault()
+  // Ignore modifier-only keypresses
+  if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return
+
   const parts = []
   if (e.ctrlKey)  parts.push('Ctrl')
   if (e.altKey)   parts.push('Alt')
   if (e.shiftKey) parts.push('Shift')
-  if (!['Control', 'Alt', 'Shift'].includes(e.key)) parts.push(e.key.toUpperCase())
+  parts.push(e.key === ' ' ? 'Space' : e.key.toUpperCase())
   document.getElementById('hotkey').value = parts.join('+')
 
   ahkHotkey = (e.ctrlKey  ? '^' : '')
@@ -42,7 +45,8 @@ function finishSetup() {
   window.chrome.webview.postMessage(JSON.stringify({ action: 'saveConfig', config }))
 }
 
-// AHK replies with selected path from file picker
+// AHK calls window.onAHKMessage() directly on this page.
+// data.js is NOT loaded on onboarding.html, so there is no name collision.
 function onAHKMessage(msg) {
   if (msg.type === 'pathSelected')
     document.getElementById('data-path').value = msg.path

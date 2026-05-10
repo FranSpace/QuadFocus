@@ -65,11 +65,22 @@ document.getElementById('app').addEventListener('click', e => {
   const itemEl = e.target.closest('.item')
   if (!itemEl) return
   const myIndent = parseInt(itemEl.style.paddingLeft || '0')
+  const isCollapsed = itemEl.dataset.collapsed === '1'
+  itemEl.dataset.collapsed = isCollapsed ? '' : '1'
+
+  // Walk direct children (one indent level deeper)
   let next = itemEl.nextElementSibling
   while (next && next.classList.contains('item')) {
     const nextIndent = parseInt(next.style.paddingLeft || '0')
     if (nextIndent <= myIndent) break
-    next.style.display = next.style.display === 'none' ? '' : 'none'
+    if (nextIndent === myIndent + 16) {
+      // Direct child: toggle based on collapsed state
+      next.style.display = isCollapsed ? '' : 'none'
+    } else {
+      // Grandchild: only show if parent is also expanded
+      // (leave hidden if parent is still collapsed)
+      if (!isCollapsed) next.style.display = 'none'
+    }
     next = next.nextElementSibling
   }
 })

@@ -57,6 +57,11 @@ function onStatusChange(id, newStatus) {
   const data = getData()
   updateItemById(data, id, item => setStatus(item, newStatus))
   setData(data)
+  // If item is no longer active, hide its popup-item card
+  if (newStatus !== 'active') {
+    const card = document.querySelector(`.popup-item[data-id="${id}"]`)
+    if (card) card.style.opacity = '0.5'
+  }
 }
 
 function updateItemById(data, id, fn) {

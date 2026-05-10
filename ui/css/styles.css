@@ -58,7 +58,6 @@ body {
 .urgency-far      { color: var(--text-muted); }
 
 /* Popup */
-.popup-body { padding: 24px; height: auto; overflow: auto; }
 .popup-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
 button { padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; }
 #btn-skip { background: var(--border); color: var(--text); }
