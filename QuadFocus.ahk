@@ -40,15 +40,22 @@ SetupTray() {
 
 ; ── Hotkey ───────────────────────────────────────────────────────────────────
 SetupHotkey() {
-    local hk := DataMgr.ConfigExists() ? DataMgr.config["hotkey"] : "^!Space"
+    local hk := (DataMgr.ConfigExists()
+                 && DataMgr.config.Has("hotkey")
+                 && DataMgr.config["hotkey"] != "")
+                ? DataMgr.config["hotkey"] : "^!Space"
     Hotkey(hk, (*) => ToggleMain())
 }
 
 ToggleMain() {
-    if (MainWin != "" && WinExist("ahk_id " . MainWin.Hwnd))
-        MainWin.Hide()
-    else
+    if (MainWin != "" && WinExist("ahk_id " . MainWin.Hwnd)) {
+        if (WinGetStyle("ahk_id " . MainWin.Hwnd) & 0x10000000)  ; WS_VISIBLE
+            MainWin.Hide()
+        else
+            MainWin.Show()
+    } else {
         ShowMain()
+    }
 }
 
 ; ── Main window ──────────────────────────────────────────────────────────────
@@ -88,9 +95,10 @@ OnMainResize(gui, minMax, w, h) {
 
 ; ── Session events (Task 6) ───────────────────────────────────────────────────
 SetupSessionEvents() {
-    ; Register for WM_WTSSESSION_CHANGE (0x02B1)
-    DllCall("Wtsapi32\WTSRegisterSessionNotification",
+    local ok := DllCall("Wtsapi32\WTSRegisterSessionNotification",
         "Ptr", A_ScriptHwnd, "UInt", 0)
+    if !ok
+        MsgBox("Warning: Could not register session notifications. Auto-open on unlock will not work.")
     OnMessage(0x02B1, OnSessionChange)
 }
 
@@ -118,7 +126,7 @@ ShowPopupThenLock() {
     }
 
     PopupWin := Gui("-MinimizeBox -MaximizeBox +AlwaysOnTop", "QuadFocus — 更新进展")
-    PopupWin.OnEvent("Close", (*) => (DoLock(), PopupWin := ""))
+    PopupWin.OnEvent("Close", (*) => (PopupWin := ""))
     PopupWin.Show("w600 h500")
 
     local wv := WebView2.create(PopupWin.Hwnd)
