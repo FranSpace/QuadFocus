@@ -51,6 +51,31 @@ assert('emptyData has lastOpenDate null', data.lastOpenDate === null)
 assert('emptyData has main quadrant', Array.isArray(data.quadrants.main.items))
 assert('emptyData has deadline standalone', Array.isArray(data.quadrants.deadline.standalone))
 
+// getData / setData
+const original = getData()
+const newData = emptyData()
+newData.lastOpenDate = '2026-05-10'
+setData(newData)
+assert('setData updates global state', getData().lastOpenDate === '2026-05-10')
+setData(original) // restore
+
+// onAHKMessage — load type sets _data and calls onDataReady
+let readyCalled = false
+window.onDataReady = () => { readyCalled = true }
+const testData = emptyData()
+testData.lastOpenDate = 'test-date'
+onAHKMessage({ type: 'load', data: testData })
+assert('onAHKMessage sets _data', getData().lastOpenDate === 'test-date')
+assert('onAHKMessage calls onDataReady', readyCalled === true)
+window.onDataReady = undefined // cleanup
+
+// emptyData — side, fun quadrants and name fields
+const d2 = emptyData()
+assert('emptyData side has items array', Array.isArray(d2.quadrants.side.items))
+assert('emptyData fun has items array', Array.isArray(d2.quadrants.fun.items))
+assert('emptyData main has name', typeof d2.quadrants.main.name === 'string')
+assert('emptyData deadline has name', typeof d2.quadrants.deadline.name === 'string')
+
 out.textContent += `\n${passed} passed, ${failed} failed`
 </script>
 </body>
