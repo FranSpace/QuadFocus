@@ -24,11 +24,15 @@ class DataManager {
         this.config := cfg
         this.dataPath := cfg["dataPath"]
         local f := FileOpen(this.configPath, "w", "UTF-8")
-        f.Write(JSON.stringify(cfg, , 2))
+        if !f
+            throw Error("Cannot write config: " . this.configPath)
+        f.Write(JSON.stringify(cfg))
         f.Close()
     }
 
     LoadData() {
+        if (this.dataPath == "")
+            return this.EmptyData()
         if (!FileExist(this.dataPath))
             return this.EmptyData()
         raw := FileRead(this.dataPath, "UTF-8")
@@ -36,8 +40,12 @@ class DataManager {
     }
 
     SaveData(data) {
+        if (this.dataPath == "")
+            throw Error("DataManager: dataPath not set. Call LoadConfig() first.")
         local f := FileOpen(this.dataPath, "w", "UTF-8")
-        f.Write(JSON.stringify(data, , 2))
+        if !f
+            throw Error("Cannot write data: " . this.dataPath)
+        f.Write(JSON.stringify(data))
         f.Close()
     }
 
