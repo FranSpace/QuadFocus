@@ -36,7 +36,10 @@ function emptyData() {
       main:     { name: '主线工作',    items: [] },
       side:     { name: '支线项目',    items: [] },
       fun:      { name: '有意思的项目', items: [] },
-      deadline: { name: 'Deadline',   standalone: [] }
+      // standalone: items that live only in the deadline quadrant.
+      // The full deadline view also aggregates items with deadlines
+      // from main/side/fun quadrants (handled by deadline.js).
+      deadline: { name: 'Deadline', standalone: [] }
     }
   }
 }
@@ -52,6 +55,10 @@ function setData(d)      { _data = d }
 // Called by AHK: window.onAHKMessage({type:'load', data:{...}})
 function onAHKMessage(msg) {
   if (msg.type === 'load') {
+    if (!msg.data || !msg.data.quadrants) {
+      console.warn('onAHKMessage: malformed payload', msg)
+      return
+    }
     _data = msg.data
     if (typeof onDataReady === 'function') onDataReady()
   }
