@@ -163,7 +163,38 @@ ShowSettings() {
     MsgBox("Settings coming soon.")
 }
 
-; ── Onboarding window (stub — implemented in Task 7) ─────────────────────────
+; ── Onboarding window ────────────────────────────────────────────────────────
 ShowOnboarding() {
-    MsgBox("Onboarding coming soon.")
+    global OnboardingWin
+    OnboardingWin := Gui("-MinimizeBox -MaximizeBox", "QuadFocus — 初始设置")
+    OnboardingWin.Show("w520 h420")
+
+    local wv := WebView2.create(OnboardingWin.Hwnd)
+    wv.Navigate("file:///" . StrReplace(A_ScriptDir, "\", "/") . "/ui/onboarding.html")
+    wv.add_WebMessageReceived((sender, args) => HandleOnboardingMessage(args, wv, OnboardingWin))
+}
+
+HandleOnboardingMessage(args, wv, win) {
+    local msg := JSON.parse(args.TryGetWebMessageAsString())
+    if (msg["action"] == "browsePath") {
+        local path := FileSelect("S", A_UserProfile . "\OneDrive\QuadFocus\data.json",
+                                 "选择 data.json 位置", "JSON 文件 (*.json)")
+        if (path != "")
+            wv.ExecuteScript("onAHKMessage({type:'pathSelected',path:'" . StrReplace(path, "\", "/") . "'})")
+    }
+    if (msg["action"] == "saveConfig") {
+        DataMgr.SaveConfig(msg["config"])
+        ApplyAutoStart(msg["config"]["autoStart"])
+        SetupHotkey()
+        win.Destroy()
+        ShowMain()
+    }
+}
+
+ApplyAutoStart(enable) {
+    local key := "HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
+    if (enable)
+        RegWrite('"' . A_ScriptFullPath . '"', "REG_SZ", key, AppName)
+    else
+        try RegDelete(key, AppName)
 }

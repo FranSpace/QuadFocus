@@ -63,3 +63,75 @@ body {
 button { padding: 8px 20px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; }
 #btn-skip { background: var(--border); color: var(--text); }
 #btn-lock { background: var(--blue); color: white; }
+
+/* Item tree */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+.item:hover { background: rgba(255,255,255,0.04); }
+.item-toggle { width: 12px; font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
+.item-icon   { width: 14px; text-align: center; flex-shrink: 0; }
+.item-title  { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-deadline { font-size: 11px; white-space: nowrap; }
+
+/* Deadline quadrant */
+.deadline-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+}
+.deadline-item:hover { background: rgba(255,255,255,0.04); }
+.dl-icon  { flex-shrink: 0; }
+.dl-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-label { font-size: 12px; white-space: nowrap; }
+.dl-date  { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+.empty { color: var(--text-muted); font-style: italic; padding: 8px; font-size: 13px; }
+
+/* Popup */
+.popup-body  { padding: 24px; overflow-y: auto; min-height: 100vh; }
+.popup-body h2 { margin-bottom: 16px; font-size: 16px; }
+.popup-group { margin-bottom: 20px; }
+.popup-group h3 { font-size: 12px; color: var(--text-muted); text-transform: uppercase;
+                  letter-spacing: 0.05em; margin-bottom: 8px; }
+.popup-item  { background: var(--surface); border-radius: 8px; padding: 12px; margin-bottom: 8px;
+               border: 1px solid var(--border); }
+.popup-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.status-select {
+  background: var(--border); color: var(--text); border: none;
+  border-radius: 4px; padding: 3px 6px; font-size: 12px; cursor: pointer;
+}
+.log-input {
+  width: 100%; background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 6px 8px; font-size: 13px; resize: vertical; font-family: inherit;
+}
+.log-input:focus { outline: none; border-color: var(--blue); }
+
+/* Onboarding / Settings shared */
+.onboarding-body { padding: 32px; overflow-y: auto; }
+.onboarding-body h1 { font-size: 22px; margin-bottom: 24px; }
+.step h2 { font-size: 16px; margin-bottom: 12px; }
+.step p  { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }
+.step input[type=text] {
+  width: 100%; background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 7px 10px; font-size: 13px; margin-bottom: 8px;
+}
+.step input[type=text]:focus { outline: none; border-color: var(--blue); }
+.step button {
+  margin-right: 8px; background: var(--blue); color: white;
+  padding: 7px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px;
+}
+.step button:hover { opacity: 0.85; }
+.step label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
