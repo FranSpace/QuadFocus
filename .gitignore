@@ -1,18 +1,13 @@
-# AHK source files — not distributed
+# Source code — not distributed via repo (bundled in release zip)
 *.ahk
-ComVar.ahk
-Promise.ahk
+ui/
+lib/
 
-# Stray DLL copy at root (lib/64bit/ is the canonical location)
+# Stray directories
 /64bit/
-
-# Internal planning docs
 docs/
 
-# Test pages
-ui/tests/
-
-# User data (stored in user's chosen path, not in repo)
+# User data
 data.json
 
 # OS
