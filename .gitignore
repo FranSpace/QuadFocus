@@ -1,0 +1,21 @@
+# AHK source files — not distributed
+*.ahk
+ComVar.ahk
+Promise.ahk
+
+# Stray DLL copy at root (lib/64bit/ is the canonical location)
+/64bit/
+
+# Internal planning docs
+docs/
+
+# Test pages
+ui/tests/
+
+# User data (stored in user's chosen path, not in repo)
+data.json
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini

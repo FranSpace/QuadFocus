@@ -25,6 +25,21 @@
       <div class="items" id="items-deadline"></div>
     </div>
   </div>
+  <!-- Floating input dialog -->
+  <div id="float-dialog" class="float-dialog hidden"></div>
+
+  <!-- Archive panel -->
+  <button id="archive-fab" onclick="toggleArchive()">
+    📦 归档 <span id="archive-count">0</span>
+  </button>
+  <div id="archive-panel" class="archive-panel hidden">
+    <div class="archive-header">
+      <h3>归档记录</h3>
+      <button class="archive-close" onclick="toggleArchive()">×</button>
+    </div>
+    <div id="archive-list"></div>
+  </div>
+
   <script src="js/data.js"></script>
   <script src="js/deadline.js"></script>
   <script src="js/main.js"></script>

@@ -5,14 +5,35 @@
   <title>QuadFocus — 更新进展</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="popup-body">
-  <h2>📝 锁屏前，更新一下今天的进展</h2>
-  <div id="active-items"></div>
-  <div class="popup-actions">
-    <button id="btn-skip" onclick="skipAndLock()">跳过</button>
-    <button id="btn-lock" onclick="saveAndLock()">锁屏</button>
+<body class="popup-page">
+  <div id="popup-toolbar">
+    <button id="btn-close" onclick="closePopup()">✕ 取消锁屏</button>
+    <span class="popup-toolbar-title">锁屏前，更新一下今天的进展</span>
+    <div class="popup-toolbar-actions">
+      <button id="btn-skip" onclick="skipAndLock()">跳过</button>
+      <button id="btn-lock" onclick="saveAndLock()">保存并锁定</button>
+    </div>
+  </div>
+  <div id="popup-grid">
+    <div class="popup-quadrant" id="pq-main">
+      <h2>🔵 主线工作</h2>
+      <div id="pq-items-main"></div>
+    </div>
+    <div class="popup-quadrant" id="pq-side">
+      <h2>🟡 支线项目</h2>
+      <div id="pq-items-side"></div>
+    </div>
+    <div class="popup-quadrant" id="pq-fun">
+      <h2>🟢 有意思的项目</h2>
+      <div id="pq-items-fun"></div>
+    </div>
+    <div class="popup-quadrant" id="pq-deadline">
+      <h2>🔴 Deadline</h2>
+      <div id="pq-items-deadline"></div>
+    </div>
   </div>
   <script src="js/data.js"></script>
+  <script src="js/deadline.js"></script>
   <script src="js/popup.js"></script>
 </body>
 </html>

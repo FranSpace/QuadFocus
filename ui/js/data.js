@@ -10,6 +10,7 @@ function makeItem(title) {
     id: makeId(),
     title,
     status: 'todo',       // todo | active | paused | done
+    description: '',
     deadline: null,        // ISO date string or null
     logs: [],              // [{ time: string, text: string }]
     children: []           // recursive same shape
@@ -32,6 +33,7 @@ function setStatus(item, status) {
 function emptyData() {
   return {
     lastOpenDate: null,
+    archive: [],
     quadrants: {
       main:     { name: '主线工作',    items: [] },
       side:     { name: '支线项目',    items: [] },
@@ -60,6 +62,7 @@ function onAHKMessage(msg) {
       return
     }
     _data = msg.data
+    if (!_data.archive) _data.archive = []
     if (typeof onDataReady === 'function') onDataReady()
   }
 }
