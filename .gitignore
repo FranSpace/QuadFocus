@@ -1,6 +1,5 @@
-# Source code — not distributed via repo (bundled in release zip)
+# AHK source code — compiled into exe, not distributed
 *.ahk
-ui/
 lib/
 
 # Stray directories
