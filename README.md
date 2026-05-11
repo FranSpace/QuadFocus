@@ -1,10 +1,16 @@
-# QuadFocus
+<p align="center">
+  <img src="logo.png" alt="QuadFocus" width="140" />
+</p>
 
-**四象限任务管理 × 锁屏进展记录**，Windows 桌面原生工具。
+<h1 align="center">QuadFocus</h1>
 
-![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
-![Version](https://img.shields.io/badge/version-1.0.0-green)
-![License](https://img.shields.io/badge/license-Private-lightgrey)
+<p align="center"><strong>四象限任务管理 × 锁屏进展记录</strong>，Windows 桌面原生工具。</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue" />
+  <img src="https://img.shields.io/badge/version-1.0.0-green" />
+  <img src="https://img.shields.io/badge/license-Private-lightgrey" />
+</p>
 
 ---
 
