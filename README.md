@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.png" alt="QuadFocus" width="140" />
+  <img src="logo_name.png" alt="QuadFocus" width="140" />
 </p>
 
 <h1 align="center">QuadFocus</h1>
@@ -18,7 +18,7 @@
 
 QuadFocus 是一款轻量级 Windows 桌面效率工具，帮助多线程工作的人理清任务优先级，并在每次锁屏时自然地完成进展记录。
 
-核心理念：**不打断工作流，在你锁屏的瞬间完成当日复盘。**
+核心理念：**主动提醒不打断工作流，在你锁屏的瞬间完成当日复盘。**
 
 ---
 
