@@ -187,7 +187,7 @@ function updateTitlebarDate() {
   const el = document.getElementById('tb-date')
   if (!el) return
   const now    = new Date()
-  const days   = ['SUN','MON','TUE','WED','THU','FRI','SAT']
+  const days   = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六']
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
   const day    = days[now.getDay()]
   const month  = months[now.getMonth()]
