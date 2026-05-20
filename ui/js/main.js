@@ -64,9 +64,11 @@ function initQuadrantIcons() {
   const iconMain = document.getElementById('icon-main')
   const iconSide = document.getElementById('icon-side')
   const iconFun  = document.getElementById('icon-fun')
+  const iconDdl  = document.getElementById('icon-ddl')
   if (iconMain) iconMain.innerHTML = QUAD_ICONS.main
   if (iconSide) iconSide.innerHTML = QUAD_ICONS.side
   if (iconFun)  iconFun.innerHTML  = QUAD_ICONS.fun
+  if (iconDdl)  iconDdl.innerHTML  = QUAD_ICONS.ddl
 }
 
 // ── Stats counting ────────────────────────────────────────────────────────────
@@ -97,11 +99,283 @@ function updateStats(key, items) {
 }
 
 function onDataReady() {
+  initTitlebar()
   initQuadrantIcons()
   renderAll()
   renderArchiveBtn()
   setupResizable()
   if (!_dndInitialized) { setupDragDrop(); _dndInitialized = true }
+}
+
+// ── Title bar ─────────────────────────────────────────────────────────────────
+
+function initTitlebar() {
+  updateTitlebarDate()
+  // Refresh date every minute
+  setInterval(updateTitlebarDate, 60000)
+
+  // Window drag: mousedown on titlebar (skip interactive elements)
+  const titlebar = document.getElementById('titlebar')
+  if (titlebar) {
+    titlebar.addEventListener('mousedown', e => {
+      if (e.button !== 0) return
+      if (e.target.closest('.no-drag, button, input, kbd, a')) return
+      tbWinDrag()
+    })
+    titlebar.addEventListener('dblclick', e => {
+      if (e.target.closest('.no-drag, button, input, kbd, a')) return
+      tbWinMaximize()
+    })
+  }
+
+  // Window control buttons
+  document.getElementById('tb-minimize').addEventListener('click', tbWinMinimize)
+  document.getElementById('tb-maximize').addEventListener('click', tbWinMaximize)
+  document.getElementById('tb-close').addEventListener('click', tbWinClose)
+
+  // Search
+  const searchInput = document.getElementById('tb-search-input')
+  if (searchInput) {
+    searchInput.addEventListener('input', () => performSearch(searchInput.value))
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeSearchResults(); searchInput.value = ''; searchInput.blur() }
+      if (e.key === 'ArrowDown') { e.preventDefault(); moveSearchSelection(1) }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); moveSearchSelection(-1) }
+      if (e.key === 'Enter')     { e.preventDefault(); commitSearchSelection() }
+    })
+    searchInput.addEventListener('focus', () => {
+      if (searchInput.value.trim()) performSearch(searchInput.value)
+    })
+  }
+
+  // Ctrl+K to focus search
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'k') {
+      e.preventDefault()
+      if (searchInput) { searchInput.focus(); searchInput.select() }
+    }
+  })
+
+  // N shortcut for new item (when not in a text field)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const tag = document.activeElement.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement.contentEditable === 'true') return
+      tbNewItem()
+    }
+  })
+
+  // Today button
+  document.getElementById('tb-btn-today').addEventListener('click', tbScrollToday)
+
+  // New button
+  document.getElementById('tb-btn-new').addEventListener('click', e => {
+    tbNewItem(document.getElementById('tb-btn-new'))
+  })
+
+  // Close search results when clicking outside
+  document.addEventListener('mousedown', e => {
+    const results = document.getElementById('search-results')
+    const wrap    = document.getElementById('tb-search-wrap')
+    if (results && wrap && !results.contains(e.target) && !wrap.contains(e.target)) {
+      closeSearchResults()
+    }
+  })
+}
+
+function updateTitlebarDate() {
+  const el = document.getElementById('tb-date')
+  if (!el) return
+  const now    = new Date()
+  const days   = ['SUN','MON','TUE','WED','THU','FRI','SAT']
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+  const day    = days[now.getDay()]
+  const month  = months[now.getMonth()]
+  const date   = now.getDate()
+  const year   = now.getFullYear()
+  const wk     = getISOWeek(now)
+  el.textContent = `${day} · ${month} ${date}, ${year} · WK ${pad(wk)}`
+}
+
+function getISOWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7))
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7)
+}
+
+// ── Window control messages ───────────────────────────────────────────────────
+
+function tbSend(action) {
+  if (window.chrome && window.chrome.webview) {
+    window.chrome.webview.postMessage(JSON.stringify({ action }))
+  }
+}
+function tbWinDrag()     { tbSend('winDrag') }
+function tbWinMinimize() { tbSend('winMinimize') }
+function tbWinMaximize() { tbSend('winMaximize') }
+function tbWinClose()    { tbSend('winClose') }
+
+// ── Today / New shortcuts ────────────────────────────────────────────────────
+
+function tbScrollToday() {
+  const dlQ = document.getElementById('q-deadline')
+  if (dlQ) dlQ.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  // Flash the deadline quadrant briefly
+  dlQ && dlQ.classList.add('highlight-flash')
+  setTimeout(() => dlQ && dlQ.classList.remove('highlight-flash'), 900)
+}
+
+function tbNewItem(anchorBtn) {
+  const btn = anchorBtn || document.getElementById('tb-btn-new')
+  showFloatDialog(btn, dialog => {
+    dialog.style.minWidth = '200px'
+    dialog.innerHTML = `
+      <div class="float-label">添加到哪个象限？</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+        <button class="float-btn-ok" style="justify-content:flex-start;text-align:left;gap:8px;display:flex;align-items:center"
+          onclick="closeFloatDialog();addTopLevelItem('main')">
+          <span style="color:var(--main)">●</span> 主线工作
+        </button>
+        <button class="float-btn-ok" style="background:var(--side);justify-content:flex-start;text-align:left;gap:8px;display:flex;align-items:center"
+          onclick="closeFloatDialog();addTopLevelItem('side')">
+          <span style="color:var(--side-soft)">●</span> 支线项目
+        </button>
+        <button class="float-btn-ok" style="background:var(--fun);justify-content:flex-start;text-align:left;gap:8px;display:flex;align-items:center"
+          onclick="closeFloatDialog();addTopLevelItem('fun')">
+          <span style="color:var(--fun-soft)">●</span> 有意思的项目
+        </button>
+      </div>`
+  })
+}
+
+// ── Search ───────────────────────────────────────────────────────────────────
+
+let _searchIdx = -1
+
+function getAllSearchableItems() {
+  const data    = getData()
+  const results = []
+  const quadNames = { main: '主线', side: '支线', fun: '趣项' }
+
+  function walk(items, quadrant, parentTitle) {
+    for (const item of items) {
+      results.push({ id: item.id, title: item.title, quadrant, parentTitle })
+      if (item.children && item.children.length) walk(item.children, quadrant, item.title)
+    }
+  }
+
+  for (const q of ['main', 'side', 'fun']) {
+    walk(data.quadrants[q].items, q, null)
+  }
+  // Standalone deadline items
+  for (const item of (data.quadrants.deadline.standalone || [])) {
+    results.push({ id: item.id, title: item.title, quadrant: 'ddl', parentTitle: null })
+  }
+  return results
+}
+
+function performSearch(query) {
+  const q = query.trim().toLowerCase()
+  if (!q) { closeSearchResults(); return }
+  const all     = getAllSearchableItems()
+  const matches = all.filter(r => r.title.toLowerCase().includes(q)).slice(0, 10)
+  _searchIdx = -1
+  renderSearchResults(matches, q)
+}
+
+function renderSearchResults(results, query) {
+  const el   = document.getElementById('search-results')
+  const wrap = document.getElementById('tb-search-wrap')
+  if (!el || !wrap) return
+
+  // Position below the search box
+  const rect = wrap.getBoundingClientRect()
+  el.style.left  = rect.left + 'px'
+  el.style.top   = (rect.bottom + 4) + 'px'
+  el.style.minWidth = rect.width + 'px'
+  el.classList.remove('hidden')
+
+  if (!results.length) {
+    el.innerHTML = `<div class="search-no-results">无匹配结果</div>`
+    return
+  }
+
+  const quadLabel = { main: '主线', side: '支线', fun: '趣项', ddl: 'DDL' }
+  el.innerHTML = results.map((r, i) => {
+    const qClass = `sr-quad-${r.quadrant}`
+    const parent = r.parentTitle ? `<span class="search-result-parent">← ${esc(r.parentTitle)}</span>` : ''
+    // Highlight matching text
+    const hi  = r.title.replace(new RegExp('(' + escapeRegex(query) + ')', 'gi'), '<mark>$1</mark>')
+    return `<div class="search-result-item" data-idx="${i}" data-id="${esc(r.id)}" data-quad="${esc(r.quadrant)}"
+              onclick="selectSearchResult(this)">
+      <span class="search-result-quad ${qClass}">${quadLabel[r.quadrant] || r.quadrant}</span>
+      <span class="search-result-title">${hi}</span>
+      ${parent}
+    </div>`
+  }).join('')
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function moveSearchSelection(dir) {
+  const items = document.querySelectorAll('#search-results .search-result-item')
+  if (!items.length) return
+  items[_searchIdx]?.classList.remove('sr-active')
+  _searchIdx = Math.max(-1, Math.min(items.length - 1, _searchIdx + dir))
+  if (_searchIdx >= 0) {
+    items[_searchIdx].classList.add('sr-active')
+    items[_searchIdx].scrollIntoView({ block: 'nearest' })
+  }
+}
+
+function commitSearchSelection() {
+  const items = document.querySelectorAll('#search-results .search-result-item')
+  if (_searchIdx >= 0 && items[_searchIdx]) {
+    selectSearchResult(items[_searchIdx])
+  } else if (items.length === 1) {
+    selectSearchResult(items[0])
+  }
+}
+
+function selectSearchResult(el) {
+  const id   = el.dataset.id
+  const quad = el.dataset.quad
+  closeSearchResults()
+  const input = document.getElementById('tb-search-input')
+  if (input) { input.value = ''; input.blur() }
+
+  if (quad === 'ddl') {
+    tbScrollToday(); return
+  }
+
+  // Find item element in the quadrant and scroll to it
+  const itemEl = document.querySelector(`.item[data-id="${id}"]`)
+  if (itemEl) {
+    // Expand parents if collapsed
+    let parent = itemEl
+    while (parent && parent.classList.contains('item')) {
+      if (parent.style.display === 'none') {
+        const pid = parent.dataset.parentId
+        if (pid) {
+          const parentEl = document.querySelector(`.item[data-id="${pid}"]`)
+          if (parentEl) toggleCollapse(pid, parentEl)
+        }
+      }
+      parent = parent.previousElementSibling
+    }
+    itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    itemEl.classList.add('highlight-flash')
+    setTimeout(() => itemEl.classList.remove('highlight-flash'), 900)
+  }
+}
+
+function closeSearchResults() {
+  const el = document.getElementById('search-results')
+  if (el) el.classList.add('hidden')
+  _searchIdx = -1
 }
 
 function saveData() {
@@ -677,6 +951,13 @@ function renderDeadlineQuadrant(deadlineItems, standalone) {
   }
 
   el.appendChild(makeAddBtn('+ 添加独立事项', btn => addStandaloneItem(btn)))
+
+  // Update deadline stats badge
+  const statsEl = document.getElementById('stats-deadline')
+  if (statsEl) {
+    const total = deadlineItems.length + standalone.length
+    statsEl.textContent = total ? total + ' 项' : '无任务'
+  }
 }
 
 function addStandaloneItem(anchorBtn) {

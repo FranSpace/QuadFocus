@@ -44,13 +44,241 @@ body {
   font-size: 14px;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Custom title bar ───────────────────────────────────────────────────────── */
+
+#titlebar {
+  height: 36px;
+  min-height: 36px;
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--rule-hi);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  user-select: none;
+  padding: 0;
+}
+
+#tb-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px 0 12px;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+#tb-app-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--sans);
+  letter-spacing: -0.01em;
+}
+
+.tb-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--rule-hi);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+#tb-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(251,248,238,0.7);
+  border: 1px solid var(--rule-med);
+  border-radius: 5px;
+  padding: 3px 8px;
+  margin: 0 6px;
+  cursor: text;
+  min-width: 160px;
+}
+#tb-search-wrap:focus-within {
+  border-color: var(--main);
+  background: var(--surface);
+}
+#tb-search-icon {
+  color: var(--ink-faint);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+#tb-search-input {
+  border: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink);
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+#tb-search-input::placeholder { color: var(--ink-faint); }
+#tb-search-kbd {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--ink-faint);
+  border: 1px solid var(--rule-med);
+  border-radius: 3px;
+  padding: 1px 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  background: var(--bg);
+}
+#tb-search-wrap:focus-within #tb-search-kbd { display: none; }
+
+#tb-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  min-width: 0;
+}
+#tb-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+#tb-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+.tb-btn {
+  padding: 3px 9px;
+  font-size: 11.5px;
+  border-radius: 5px;
+  border: 1px solid var(--rule-med);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--sans);
+  white-space: nowrap;
+  transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tb-btn:hover { background: var(--surface-hi); }
+.tb-btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: transparent;
+}
+.tb-btn-primary:hover { background: #3d3025; }
+.tb-kbd {
+  font-family: var(--mono);
+  font-size: 9px;
+  border: 1px solid rgba(239,233,217,0.3);
+  border-radius: 3px;
+  padding: 1px 3px;
+  color: rgba(239,233,217,0.7);
+  background: transparent;
+}
+
+#tb-win-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+  margin-left: 2px;
+}
+.tb-win-btn {
+  width: 42px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  padding: 0;
+  font-family: var(--sans);
+  transition: background 0.1s, color 0.1s;
+}
+.tb-win-btn:hover { background: var(--rule); color: var(--ink); }
+.tb-win-close:hover { background: #c42b1c; color: white; }
+
+/* ── Search results overlay ─────────────────────────────────────────────────── */
+
+#search-results {
+  position: fixed;
+  top: 40px;
+  z-index: 900;
+  background: var(--surface);
+  border: 1px solid var(--rule-hi);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(60,48,30,0.2);
+  min-width: 300px;
+  max-width: 480px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+#search-results.hidden { display: none; }
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.search-result-item:hover,
+.search-result-item.sr-active { background: var(--surface-hi); }
+.search-result-quad {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  font-family: var(--mono);
+}
+.sr-quad-main { background: var(--main-soft); color: var(--main); }
+.sr-quad-side { background: var(--side-soft); color: var(--side); }
+.sr-quad-fun  { background: var(--fun-soft);  color: var(--fun); }
+.sr-quad-ddl  { background: var(--ddl-soft);  color: var(--ddl); }
+.search-result-title {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-result-parent {
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.search-no-results {
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  font-style: italic;
 }
 
 #app {
   display: grid;
   grid-template-columns: 1fr 4px 1fr;
   grid-template-rows: 1fr 4px 1fr;
-  height: 100vh;
+  height: calc(100vh - 36px);
   overflow: hidden;
   position: relative;
 }
@@ -108,6 +336,21 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+/* Brief highlight flash used by search and Today button */
+@keyframes highlightFlash {
+  0%   { background: rgba(47,111,176,0.2); }
+  100% { background: transparent; }
+}
+.highlight-flash { animation: highlightFlash 0.9s ease-out forwards; }
+
+/* Search results mark highlight */
+#search-results mark {
+  background: rgba(47,111,176,0.18);
+  color: var(--main);
+  border-radius: 2px;
+  padding: 0 1px;
 }
 
 /* New quadrant header structure */
@@ -655,43 +898,27 @@ button {
 .step button:hover { opacity: 0.85; }
 .step label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 
-/* ── Archive FAB ────────────────────────────────────────────────────────────── */
+/* ── Archive count badge (in titlebar) ──────────────────────────────────────── */
 
-#archive-fab {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
-  background: var(--surface);
-  border: 1px solid var(--rule-med);
-  color: var(--ink);
-  border-radius: 20px;
-  padding: 7px 16px;
-  font-size: 13px;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(60,48,30,0.18);
-  transition: background 0.15s;
-  font-family: var(--sans);
-}
-#archive-fab:hover { background: var(--surface-hi); }
 #archive-count {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--main);
   color: white;
-  border-radius: 10px;
-  font-size: 11px;
-  min-width: 18px;
-  padding: 0 5px;
-  text-align: center;
-  margin-left: 4px;
-  line-height: 18px;
+  border-radius: 8px;
+  font-size: 10px;
+  min-width: 16px;
+  padding: 0 4px;
+  height: 16px;
+  font-family: var(--mono);
 }
 
 /* ── Archive side panel ─────────────────────────────────────────────────────── */
 
 .archive-panel {
   position: fixed;
-  right: 0; top: 0; bottom: 0;
+  right: 0; top: 36px; bottom: 0;
   width: 320px;
   background: var(--surface);
   border-left: 1px solid var(--rule-hi);
