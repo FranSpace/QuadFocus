@@ -357,7 +357,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px 9px;
+  padding: 6px 12px 5px;
   border-bottom: 1px solid var(--rule-hi);
   flex-shrink: 0;
   background: var(--surface);
@@ -366,7 +366,7 @@ body {
 .quadrant-header-left {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -379,20 +379,22 @@ body {
 
 .quadrant-title-block {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
   min-width: 0;
 }
 
 .quadrant-title-zh {
   font-family: var(--serif);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--ink);
-  line-height: 1.2;
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .quadrant-title-en {
@@ -400,8 +402,10 @@ body {
   font-style: italic;
   font-size: 11px;
   color: var(--ink-faint);
-  line-height: 1.2;
+  line-height: 1.3;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .quadrant-stats {
@@ -410,18 +414,18 @@ body {
   color: var(--ink-muted);
   border: 1px solid var(--rule-med);
   border-radius: 4px;
-  padding: 2px 7px;
+  padding: 1px 6px;
   white-space: nowrap;
   flex-shrink: 0;
   background: var(--surface-hi);
 }
 
-/* Legacy h2 fallback (deadline quadrant still uses it) */
+/* Legacy h2 fallback */
 .quadrant h2 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 0;
-  padding: 10px 14px 9px;
+  padding: 6px 12px 5px;
   border-bottom: 1px solid var(--rule-hi);
   font-family: var(--serif);
   color: var(--ink);
