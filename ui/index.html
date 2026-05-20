@@ -4,26 +4,56 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QuadFocus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <div id="app">
     <div class="quadrant" id="q-main">
-      <h2>🔵 主线工作</h2>
+      <div class="quadrant-header">
+        <div class="quadrant-header-left">
+          <span class="quadrant-icon" id="icon-main"></span>
+          <div class="quadrant-title-block">
+            <span class="quadrant-title-zh">主线工作</span>
+            <span class="quadrant-title-en">Main Track</span>
+          </div>
+        </div>
+        <div class="quadrant-stats" id="stats-main">—</div>
+      </div>
       <div class="items" id="items-main"></div>
     </div>
     <div class="quadrant" id="q-side">
-      <h2>🟡 支线项目</h2>
+      <div class="quadrant-header">
+        <div class="quadrant-header-left">
+          <span class="quadrant-icon" id="icon-side"></span>
+          <div class="quadrant-title-block">
+            <span class="quadrant-title-zh">支线项目</span>
+            <span class="quadrant-title-en">Side Projects</span>
+          </div>
+        </div>
+        <div class="quadrant-stats" id="stats-side">—</div>
+      </div>
       <div class="items" id="items-side"></div>
     </div>
     <div class="divider divider-v" id="divider-v"></div>
     <div class="divider divider-h" id="divider-h"></div>
     <div class="quadrant" id="q-fun">
-      <h2>🟢 有意思的项目</h2>
+      <div class="quadrant-header">
+        <div class="quadrant-header-left">
+          <span class="quadrant-icon" id="icon-fun"></span>
+          <div class="quadrant-title-block">
+            <span class="quadrant-title-zh">有意思的项目</span>
+            <span class="quadrant-title-en">Fun &amp; Curiosity</span>
+          </div>
+        </div>
+        <div class="quadrant-stats" id="stats-fun">—</div>
+      </div>
       <div class="items" id="items-fun"></div>
     </div>
     <div class="quadrant" id="q-deadline">
-      <h2>🔴 Deadline</h2>
+      <h2>Deadline</h2>
       <div class="items" id="items-deadline"></div>
     </div>
   </div>
@@ -32,7 +62,7 @@
 
   <!-- Archive panel -->
   <button id="archive-fab" onclick="toggleArchive()">
-    📦 归档 <span id="archive-count">0</span>
+    归档 <span id="archive-count">0</span>
   </button>
   <div id="archive-panel" class="archive-panel hidden">
     <div class="archive-header">

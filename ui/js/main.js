@@ -1,5 +1,7 @@
 // Collapse state persists across re-renders
 const collapsedIds = new Set()
+// Track which items have their inline log section open
+const openLogIds = new Set()
 
 let archivePanelOpen  = false
 let _floatClose       = null
@@ -14,7 +16,88 @@ let _dropIndex        = -1
 let _dropIndicator    = null
 let _dndInitialized   = false
 
+// ── Quadrant SVG icons (24×24 viewBox) ────────────────────────────────────────
+
+const QUAD_ICONS = {
+  main: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9.5" stroke="#2f6fb0" stroke-width="1.3" fill="none" opacity="0.35"/>
+    <path d="M 12 3 L 14.4 12 L 12 21 L 9.6 12 Z" fill="#2f6fb0"/>
+    <circle cx="12" cy="12" r="1.4" fill="#fbf8ee"/>
+  </svg>`,
+  side: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#c89438" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 12 21 L 12 14 M 12 14 L 5 7 M 12 14 L 19 7 M 12 14 L 12 4"/>
+    </g>
+    <circle cx="5" cy="7" r="1.8" fill="#c89438"/>
+    <circle cx="19" cy="7" r="1.8" fill="#c89438"/>
+    <circle cx="12" cy="4" r="1.8" fill="#c89438"/>
+  </svg>`,
+  fun: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 12 21 C 12 14, 5 13, 4 6 C 11 7, 13 13, 12 21 Z" fill="#4a9a6c" opacity="0.85"/>
+    <path d="M 12 21 C 12 16, 15 13, 20 11" stroke="#4a9a6c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </svg>`,
+  ddl: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#b53b3b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M 5 3.5 L 19 3.5 M 5 20.5 L 19 20.5"/>
+      <path d="M 6 3.5 C 6 9, 12 11, 12 12 C 12 13, 6 15, 6 20.5"/>
+      <path d="M 18 3.5 C 18 9, 12 11, 12 12 C 12 13, 18 15, 18 20.5"/>
+    </g>
+    <path d="M 8.5 6 L 15.5 6 L 12 10 Z" fill="#b53b3b"/>
+  </svg>`
+}
+
+// ── Status SVG badges (12×12 viewBox) ────────────────────────────────────────
+
+function makeStatusSVG(status) {
+  const svgs = {
+    todo: `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="none" stroke="#8a7e64" stroke-width="1.4"/></svg>`,
+    active: `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="none" stroke="#2f6fb0" stroke-width="1.4"/><path d="M 6 1 A 5 5 0 0 1 6 11 Z" fill="#2f6fb0"/></svg>`,
+    paused: `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="2.5" width="2" height="7" rx="0.6" fill="#a8782e"/><rect x="6.5" y="2.5" width="2" height="7" rx="0.6" fill="#a8782e"/></svg>`,
+    done: `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="5" fill="#4a9a6c"/><path d="M 3.5 6.5 L 5.5 8.5 L 8.5 3.5" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`
+  }
+  return svgs[status] || svgs.todo
+}
+
+// ── Init icons in header ──────────────────────────────────────────────────────
+
+function initQuadrantIcons() {
+  const iconMain = document.getElementById('icon-main')
+  const iconSide = document.getElementById('icon-side')
+  const iconFun  = document.getElementById('icon-fun')
+  if (iconMain) iconMain.innerHTML = QUAD_ICONS.main
+  if (iconSide) iconSide.innerHTML = QUAD_ICONS.side
+  if (iconFun)  iconFun.innerHTML  = QUAD_ICONS.fun
+}
+
+// ── Stats counting ────────────────────────────────────────────────────────────
+
+function countItemsDeep(items) {
+  const counts = { active: 0, todo: 0, paused: 0, done: 0 }
+  function walk(list) {
+    for (const item of list) {
+      const s = item.status
+      if (counts[s] !== undefined) counts[s]++
+      if (item.children && item.children.length) walk(item.children)
+    }
+  }
+  walk(items)
+  return counts
+}
+
+function updateStats(key, items) {
+  const el = document.getElementById('stats-' + key)
+  if (!el) return
+  const c = countItemsDeep(items)
+  const parts = []
+  if (c.active) parts.push(c.active + ' active')
+  if (c.todo)   parts.push(c.todo   + ' todo')
+  if (c.paused) parts.push(c.paused + ' paused')
+  if (c.done)   parts.push(c.done   + ' done')
+  el.textContent = parts.length ? parts.join(' · ') : '无任务'
+}
+
 function onDataReady() {
+  initQuadrantIcons()
   renderAll()
   renderArchiveBtn()
   setupResizable()
@@ -46,6 +129,7 @@ function renderQuadrant(key, items) {
   container.innerHTML = ''
   items.forEach(item => appendItemTree(container, item, 0, key))
   container.appendChild(makeAddBtn('+ 添加项目', () => addTopLevelItem(key)))
+  updateStats(key, items)
 }
 
 function appendItemTree(container, item, depth, quadrant) {
@@ -76,7 +160,7 @@ function appendItemTree(container, item, depth, quadrant) {
 function buildItemEl(item, depth, quadrant, parentId) {
   const el = document.createElement('div')
   el.className = 'item status-' + item.status
-  el.style.paddingLeft = (depth * 16) + 'px'
+  el.style.paddingLeft = (depth * 20) + 'px'
   el.dataset.id       = item.id
   el.dataset.quadrant = quadrant
   el.dataset.depth    = depth
@@ -124,12 +208,11 @@ function buildItemEl(item, depth, quadrant, parentId) {
   }
   row.appendChild(toggle)
 
-  // Status badge (click to cycle)
-  const statusLabels = { todo: 'TODO', active: 'ACTIVE', paused: 'PAUSE', done: 'DONE' }
+  // Status badge — SVG icon (click to cycle)
   const badge = document.createElement('span')
-  badge.className   = 'item-status-badge status-badge-' + item.status
-  badge.textContent = statusLabels[item.status] || item.status
-  badge.title       = '点击切换状态'
+  badge.className = 'item-status-badge'
+  badge.innerHTML = makeStatusSVG(item.status)
+  badge.title     = '点击切换状态'
   badge.addEventListener('click', e => { e.stopPropagation(); cycleStatus(item.id, quadrant) })
   row.appendChild(badge)
 
@@ -157,11 +240,14 @@ function buildItemEl(item, depth, quadrant, parentId) {
   }
   const dlText = item.deadline ? '清除日期' : '+ 日期'
   controls.appendChild(makeCtrlBtn(dlText, btn => editDeadline(item.id, quadrant, item.deadline, btn)))
-  if (item.logs && item.logs.length) {
-    const logBtn = makeCtrlBtn('日志 ' + item.logs.length, btn => showLogsDialog(btn, item.logs, item.title))
-    logBtn.classList.add('ctrl-btn-log')
-    controls.appendChild(logBtn)
-  }
+
+  // Log hover button — always shown, with count if logs exist
+  const logCount = item.logs && item.logs.length ? item.logs.length : 0
+  const logBtnText = logCount ? '日志 ' + logCount : '日志'
+  const logBtn = makeCtrlBtn(logBtnText, () => toggleItemLog(item.id))
+  logBtn.classList.add('ctrl-btn-log')
+  controls.appendChild(logBtn)
+
   const delBtn = makeCtrlBtn('×', () => deleteItem(item.id, quadrant))
   delBtn.classList.add('ctrl-btn-del')
   controls.appendChild(delBtn)
@@ -176,6 +262,45 @@ function buildItemEl(item, depth, quadrant, parentId) {
   descEl.textContent = hasDesc ? item.description : ''
   descEl.addEventListener('click', e => { e.stopPropagation(); startEditDesc(descEl, item.id, quadrant) })
   el.appendChild(descEl)
+
+  // ── Inline log section ────────────────────────────────────────────────────
+  const logSection = document.createElement('div')
+  logSection.className = 'item-log-section'
+  logSection.dataset.itemId = item.id
+  if (openLogIds.has(item.id)) logSection.classList.add('open')
+
+  // Log list (reverse order — newest first)
+  const logList = document.createElement('div')
+  logList.className = 'item-log-list'
+  if (item.logs && item.logs.length) {
+    item.logs.slice().reverse().forEach(l => {
+      const entry = document.createElement('div')
+      entry.className = 'log-entry-inline'
+      entry.innerHTML = `<span class="log-time">${esc(l.time)}</span><span class="log-text">${esc(l.text)}</span>`
+      logList.appendChild(entry)
+    })
+  }
+  logSection.appendChild(logList)
+
+  // Log input row
+  const inputRow = document.createElement('div')
+  inputRow.className = 'item-log-input-row'
+  const textarea = document.createElement('textarea')
+  textarea.className   = 'log-inline-textarea'
+  textarea.placeholder = '记录今日进展…'
+  textarea.rows        = 1
+  // Prevent click on textarea from propagating to item (which would trigger collapse etc.)
+  textarea.addEventListener('click', e => e.stopPropagation())
+  inputRow.appendChild(textarea)
+
+  const addBtn = document.createElement('button')
+  addBtn.className   = 'log-inline-add'
+  addBtn.textContent = '添加'
+  addBtn.addEventListener('click', e => { e.stopPropagation(); addInlineLog(item.id, quadrant, addBtn) })
+  inputRow.appendChild(addBtn)
+  logSection.appendChild(inputRow)
+
+  el.appendChild(logSection)
 
   return el
 }
@@ -194,6 +319,47 @@ function makeAddBtn(text, onClick) {
   btn.textContent = text
   btn.addEventListener('click', e => { e.stopPropagation(); onClick(btn) })
   return btn
+}
+
+// ── Inline log helpers ────────────────────────────────────────────────────────
+
+function toggleItemLog(id) {
+  const el = document.querySelector(`.item-log-section[data-item-id="${id}"]`)
+  if (!el) return
+  if (openLogIds.has(id)) {
+    openLogIds.delete(id)
+    el.classList.remove('open')
+  } else {
+    openLogIds.add(id)
+    el.classList.add('open')
+  }
+}
+
+function addInlineLog(id, quadrant, btn) {
+  const section  = btn.closest('.item-log-section')
+  const textarea = section.querySelector('.log-inline-textarea')
+  const text     = textarea.value.trim()
+  if (!text) return
+  const data = getData()
+  const item = findItemById(data.quadrants[quadrant].items, id)
+  if (!item) return
+  if (!item.logs) item.logs = []
+  const now  = new Date()
+  const time = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
+  item.logs.push({ time, text })
+  setData(data)
+  saveData()
+  textarea.value = ''
+  // Update log list DOM without full re-render
+  const list  = section.querySelector('.item-log-list')
+  const entry = document.createElement('div')
+  entry.className = 'log-entry-inline'
+  entry.innerHTML = `<span class="log-time">${esc(time)}</span><span class="log-text">${esc(text)}</span>`
+  list.insertBefore(entry, list.firstChild)
+  // Update the log hover button count
+  const itemEl    = section.closest('.item')
+  const logHoverBtn = itemEl && itemEl.querySelector('.ctrl-btn-log')
+  if (logHoverBtn) logHoverBtn.textContent = '日志 ' + item.logs.length
 }
 
 // ── Floating dialog ───────────────────────────────────────────────────────────
@@ -259,7 +425,7 @@ function toggleCollapse(id, itemEl) {
   while (next && next.classList.contains('item')) {
     const nextIndent = parseInt(next.style.paddingLeft || '0')
     if (nextIndent <= myIndent) break
-    if (nextIndent === myIndent + 16) {
+    if (nextIndent === myIndent + 20) {
       next.style.display = nowCollapsed ? 'none' : ''
     } else if (nowCollapsed) {
       next.style.display = 'none'
@@ -336,11 +502,7 @@ function startEditTitle(titleEl, id, quadrant) {
   titleEl.contentEditable = 'true'
   titleEl.classList.add('editing')
   titleEl.focus()
-  const range = document.createRange()
-  range.selectNodeContents(titleEl)
-  const sel = window.getSelection()
-  sel.removeAllRanges()
-  sel.addRange(range)
+  // Do NOT force-select all — let browser place cursor at click position
 
   let saved = false
   function finish() {
@@ -376,14 +538,7 @@ function startEditDesc(descEl, id, quadrant) {
   descEl.textContent = old
   descEl.contentEditable = 'true'
   descEl.focus()
-
-  // Place cursor at end
-  const range = document.createRange()
-  range.selectNodeContents(descEl)
-  range.collapse(false)
-  const sel = window.getSelection()
-  sel.removeAllRanges()
-  sel.addRange(range)
+  // Do NOT force cursor to end — let browser handle cursor position naturally
 
   let saved = false
   function finish() {
@@ -458,13 +613,10 @@ function editDeadline(id, quadrant, current, anchorBtn) {
     if (item) { item.deadline = null; setData(data); saveData(); renderAll() }
     return
   }
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const defaultDate = tomorrow.toISOString().slice(0, 10)
   showFloatDialog(anchorBtn, dialog => {
     dialog.innerHTML = `
       <label class="float-label">截止日期</label>
-      <input type="date" id="float-date" class="float-input" value="${defaultDate}">
+      <input type="text" id="float-date" class="float-input" placeholder="MM-DD 或留空">
       <div class="float-actions">
         <button class="float-btn-cancel" onclick="closeFloatDialog()">取消</button>
         <button class="float-btn-ok" onclick="confirmDeadline('${id}','${quadrant}')">确定</button>
@@ -475,10 +627,15 @@ function editDeadline(id, quadrant, current, anchorBtn) {
 
 function confirmDeadline(id, quadrant) {
   const input = document.getElementById('float-date')
-  if (!input || !input.value) { closeFloatDialog(); return }
+  const raw = input ? input.value.trim() : ''
+  if (!raw) { closeFloatDialog(); return }
+  let dateStr = raw
+  if (/^\d{2}-\d{2}$/.test(raw)) {
+    dateStr = new Date().getFullYear() + '-' + raw
+  }
   const data = getData()
   const item = findItemById(data.quadrants[quadrant].items, id)
-  if (item) { item.deadline = input.value; setData(data); saveData(); renderAll() }
+  if (item) { item.deadline = dateStr; setData(data); saveData(); renderAll() }
   closeFloatDialog()
 }
 
@@ -500,17 +657,18 @@ function renderDeadlineQuadrant(deadlineItems, standalone) {
       div.innerHTML = '<span class="dl-icon">⚠</span>' +
         '<span class="dl-title">' + esc(item.title) + '</span>' +
         '<span class="dl-label">' + relativeLabel(item.deadline) + '</span>' +
-        '<span class="dl-date">[' + item.deadline.slice(5) + ']</span>'
+        '<span class="dl-date">[' + item.deadline.slice(5).replace('-', '/') + ']</span>'
       el.appendChild(div)
     })
 
     standalone.forEach((item, idx) => {
       const div = document.createElement('div')
       div.className = 'deadline-item standalone ' + (item.deadline ? urgencyClass(item.deadline) : '')
+      const dateDisplay = item.deadline ? item.deadline.slice(5).replace('-', '/') : ''
       div.innerHTML = '<span class="dl-icon">•</span>' +
         '<span class="dl-title">' + esc(item.title) + '</span>' +
         (item.deadline ? '<span class="dl-label">' + relativeLabel(item.deadline) + '</span>' +
-          '<span class="dl-date">[' + item.deadline.slice(5) + ']</span>' : '')
+          '<span class="dl-date">[' + dateDisplay + ']</span>' : '')
       const delBtn = makeCtrlBtn('×', () => deleteStandalone(idx))
       delBtn.classList.add('ctrl-btn-del')
       div.appendChild(delBtn)
@@ -527,7 +685,7 @@ function addStandaloneItem(anchorBtn) {
       <label class="float-label">事项名称</label>
       <input type="text" id="float-standalone-title" class="float-input" placeholder="输入名称...">
       <label class="float-label" style="margin-top:10px">截止日期（可留空）</label>
-      <input type="date" id="float-standalone-date" class="float-input">
+      <input type="text" id="float-standalone-date" class="float-input" placeholder="MM-DD 或留空">
       <div class="float-actions">
         <button class="float-btn-cancel" onclick="closeFloatDialog()">取消</button>
         <button class="float-btn-ok" onclick="confirmStandalone()">添加</button>
@@ -549,7 +707,14 @@ function confirmStandalone() {
   if (!title) return
   const data = getData()
   const item = makeItem(title)
-  if (dateInput && dateInput.value) item.deadline = dateInput.value
+  if (dateInput && dateInput.value.trim()) {
+    const raw = dateInput.value.trim()
+    if (/^\d{2}-\d{2}$/.test(raw)) {
+      item.deadline = new Date().getFullYear() + '-' + raw
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      item.deadline = raw
+    }
+  }
   data.quadrants.deadline.standalone.push(item)
   setData(data)
   saveData()
@@ -773,7 +938,7 @@ function setupResizable() {
   const divV = document.getElementById('divider-v')
   const divH = document.getElementById('divider-h')
 
-  const SNAP_FRACTIONS = [1/4, 1/2, 3/4]
+  const SNAP_FRACTIONS = [1/3, 1/2, 2/3]
   const SNAP_RADIUS    = 18   // px
 
   // Build snap indicator dots
@@ -814,7 +979,6 @@ function setupResizable() {
     if (dragging === 'v') {
       let x    = e.clientX - rect.left
       const sz = rect.width
-      // Snap to 1/3 and 2/3 positions
       snapVEls.forEach((el, i) => {
         const snapX = SNAP_FRACTIONS[i] * sz
         if (Math.abs(x - snapX) <= SNAP_RADIUS) {
@@ -825,13 +989,11 @@ function setupResizable() {
         }
       })
       x = Math.max(200, Math.min(x, sz - 204))
-      // Use percentage so layout scales with window resize
       app.style.gridTemplateColumns = (x / sz * 100).toFixed(3) + '% 4px 1fr'
 
     } else {
       let y    = e.clientY - rect.top
       const sz = rect.height
-      // Snap to 1/3 and 2/3 positions
       snapHEls.forEach((el, i) => {
         const snapY = SNAP_FRACTIONS[i] * sz
         if (Math.abs(y - snapY) <= SNAP_RADIUS) {
