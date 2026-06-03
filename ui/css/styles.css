@@ -597,18 +597,19 @@ button {
   opacity: 0.8;
 }
 
-/* Drag handle */
+/* Drag handle — always in layout (opacity 0) so hover never shifts text */
 .drag-handle {
-  display: none;
+  display: block;
   cursor: grab;
   color: var(--ink-faint);
   font-size: 13px;
   padding: 0 3px 0 0;
   flex-shrink: 0;
   user-select: none;
-  opacity: 0.5;
+  opacity: 0;
+  transition: opacity 0.1s;
 }
-.item:hover .drag-handle { display: block; }
+.item:hover .drag-handle { opacity: 0.5; }
 .drag-handle:active { cursor: grabbing; opacity: 1; }
 
 /* Drop insertion line */
@@ -655,11 +656,13 @@ button {
 }
 .item-desc-empty.editing::before { content: none; }
 
-/* ContentEditable title */
+/* ContentEditable title — allow wrapping so long names are fully visible */
 .item-title[contenteditable="true"] {
   outline: none;
   border-bottom: 1px solid var(--main);
-  white-space: nowrap;
+  white-space: pre-wrap;
+  overflow: visible;
+  word-break: break-word;
   cursor: text;
   user-select: text;
 }
@@ -831,13 +834,16 @@ button {
 
 .popup-body  { padding: 24px; overflow-y: auto; min-height: 100vh; background: var(--bg); }
 .popup-body h2 { margin-bottom: 16px; font-size: 16px; font-family: var(--serif); }
-.popup-group { margin-bottom: 20px; }
-.popup-group h3 {
+.popup-group { margin-bottom: 16px; }
+.popup-group-label {
+  font-family: var(--serif);
   font-size: 12px;
+  font-weight: 600;
   color: var(--ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  letter-spacing: 0.03em;
+  padding: 0 2px 4px;
+  border-bottom: 1px solid var(--rule-med);
+  margin-bottom: 6px;
 }
 .popup-item {
   background: var(--surface);

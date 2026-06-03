@@ -216,6 +216,22 @@ function tbWinMinimize() { tbSend('winMinimize') }
 function tbWinMaximize() { tbSend('winMaximize') }
 function tbWinClose()    { tbSend('winClose') }
 
+function setMaximized(isMax) {
+  const btn = document.getElementById('tb-maximize')
+  if (!btn) return
+  if (isMax) {
+    // Two overlapping squares = restore icon
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+      <rect x="2.5" y="0.5" width="8" height="8" stroke="currentColor" stroke-width="1"/>
+      <rect x="0.5" y="2.5" width="8" height="8" fill="var(--bg-chrome)" stroke="currentColor" stroke-width="1"/>
+    </svg>`
+    btn.title = '还原'
+  } else {
+    btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="0.5" y="0.5" width="9" height="9" stroke="currentColor" stroke-width="1"/></svg>`
+    btn.title = '最大化'
+  }
+}
+
 // ── Today / New shortcuts ────────────────────────────────────────────────────
 
 function tbScrollToday() {
@@ -771,12 +787,18 @@ function archiveDoneItem(id, quadrant) {
   if (archivePanelOpen) renderArchiveList()
 }
 
-function startEditTitle(titleEl, id, quadrant) {
+function startEditTitle(titleEl, id, quadrant, selectAll = false) {
   const old = titleEl.textContent
   titleEl.contentEditable = 'true'
   titleEl.classList.add('editing')
   titleEl.focus()
-  // Do NOT force-select all — let browser place cursor at click position
+  if (selectAll) {
+    const range = document.createRange()
+    range.selectNodeContents(titleEl)
+    const sel = window.getSelection()
+    sel.removeAllRanges()
+    sel.addRange(range)
+  }
 
   let saved = false
   function finish() {
@@ -852,7 +874,7 @@ function addTopLevelItem(quadrant) {
   renderAll()
   requestAnimationFrame(() => {
     const el = document.querySelector('[data-id="' + item.id + '"] .item-title')
-    if (el) startEditTitle(el, item.id, quadrant)
+    if (el) startEditTitle(el, item.id, quadrant, true)
   })
 }
 
@@ -868,7 +890,7 @@ function addChildItem(parentId, quadrant) {
   renderAll()
   requestAnimationFrame(() => {
     const el = document.querySelector('[data-id="' + item.id + '"] .item-title')
-    if (el) startEditTitle(el, item.id, quadrant)
+    if (el) startEditTitle(el, item.id, quadrant, true)
   })
 }
 

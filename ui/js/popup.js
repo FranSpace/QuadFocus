@@ -6,12 +6,12 @@ function renderPopupQuadrants() {
   const data = getData()
 
   for (const key of ['main', 'side', 'fun']) {
-    const items = collectActive(data.quadrants[key].items)
+    const groups = collectActiveGrouped(data.quadrants[key].items)
     const container = document.getElementById('pq-items-' + key)
-    if (!items.length) {
+    if (!groups.length) {
       container.innerHTML = '<p class="empty">暂无进行中任务</p>'
     } else {
-      container.innerHTML = items.map(renderPopupItem).join('')
+      container.innerHTML = groups.map(renderPopupGroup).join('')
     }
   }
 
@@ -30,13 +30,36 @@ function renderPopupQuadrants() {
   }
 }
 
-function collectActive(items) {
+// Group active items by their top-level parent task.
+// Returns [{parentTitle, actives: [item, ...]}, ...]
+function collectActiveGrouped(topLevelItems) {
+  const groups = []
+  for (const top of topLevelItems) {
+    const actives = collectActiveFlat(top)
+    if (actives.length) {
+      groups.push({ parentTitle: top.title, actives })
+    }
+  }
+  return groups
+}
+
+// Collect all active items at any depth within a subtree.
+function collectActiveFlat(item) {
   const result = []
-  for (const item of items) {
-    if (item.status === 'active') result.push(item)
-    if (item.children && item.children.length) result.push(...collectActive(item.children))
+  if (item.status === 'active') result.push(item)
+  for (const child of (item.children || [])) {
+    result.push(...collectActiveFlat(child))
   }
   return result
+}
+
+function renderPopupGroup(group) {
+  const itemsHtml = group.actives.map(renderPopupItem).join('')
+  return `
+    <div class="popup-group">
+      <div class="popup-group-label">${esc(group.parentTitle)}</div>
+      ${itemsHtml}
+    </div>`
 }
 
 function renderPopupItem(item) {
