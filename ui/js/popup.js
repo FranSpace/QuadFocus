@@ -98,7 +98,7 @@ function renderActiveRow(item, depth, isSelfRow) {
           ${statusOpts(item.status)}
         </select>
       </div>
-      <textarea class="log-input" rows="2"
+      <textarea class="log-input" rows="1"
         placeholder="今天做了什么？（留空则不记录）"
         data-id="${esc(item.id)}"></textarea>
     </div>`

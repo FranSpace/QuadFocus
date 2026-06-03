@@ -508,15 +508,15 @@ button {
 }
 .popup-quadrant {
   background: var(--surface);
-  padding: 16px;
+  padding: 10px 12px;
   overflow-y: auto;
 }
 .popup-quadrant h2 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   font-family: var(--serif);
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--rule-med);
   color: var(--ink);
 }
@@ -865,52 +865,52 @@ button {
 .popup-card {
   background: var(--surface);
   border: 1px solid var(--rule-med);
-  border-radius: 8px;
-  margin-bottom: 10px;
+  border-radius: 6px;
+  margin-bottom: 7px;
   overflow: hidden;
 }
 .popup-card-header {
   background: var(--surface-hi);
   border-bottom: 1px solid var(--rule-med);
-  padding: 7px 12px;
+  padding: 5px 10px;
   display: flex;
   align-items: center;
 }
 .popup-card-title {
   font-family: var(--serif);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink);
   flex: 1;
 }
 .popup-card-body {
-  padding: 8px 10px 4px;
+  padding: 5px 8px 3px;
 }
 
 /* One active-task row within a card */
 .popup-row {
   background: var(--bg);
   border: 1px solid var(--rule);
-  border-radius: 6px;
-  padding: 7px 10px;
-  margin-bottom: 6px;
+  border-radius: 4px;
+  padding: 4px 8px 5px;
+  margin-bottom: 4px;
   transition: opacity 0.2s;
 }
 /* Child rows get a left accent to show nesting */
 .popup-row-child { border-left: 2px solid var(--rule-med); }
 
-.popup-row-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.popup-row-title  { flex: 1; font-size: 13px; color: var(--ink); font-family: var(--sans); }
+.popup-row-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.popup-row-title  { flex: 1; font-size: 12.5px; color: var(--ink); font-family: var(--sans); }
 
 /* Non-active ancestor shown as a thin section label within the card */
 .popup-subtree-label {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--ink-muted);
-  padding: 5px 4px 3px;
+  padding: 3px 2px 2px;
   border-bottom: 1px dashed var(--rule-med);
-  margin-bottom: 5px;
-  margin-top: 4px;
+  margin-bottom: 3px;
+  margin-top: 3px;
 }
 
 .status-select {
@@ -929,8 +929,9 @@ button {
   color: var(--ink);
   border: 1px solid var(--rule-med);
   border-radius: 4px;
-  padding: 6px 8px;
-  font-size: 13px;
+  padding: 3px 7px;
+  font-size: 12.5px;
+  line-height: 1.5;
   resize: vertical;
   font-family: var(--sans);
   box-sizing: border-box;
