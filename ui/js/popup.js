@@ -6,9 +6,8 @@ function renderPopupQuadrants() {
   const data = getData()
 
   for (const key of ['main', 'side', 'fun']) {
-    const items = data.quadrants[key].items
     const container = document.getElementById('pq-items-' + key)
-    const html = renderActiveTree(items)
+    const html = renderTaskCards(data.quadrants[key].items)
     container.innerHTML = html || '<p class="empty">暂无进行中任务</p>'
   }
 
@@ -27,47 +26,77 @@ function renderPopupQuadrants() {
   }
 }
 
-// Returns true if this item or any descendant is active.
+// ── Card renderer (one card per top-level task) ───────────────────────────────
+
 function hasActive(item) {
   if (item.status === 'active') return true
   return (item.children || []).some(hasActive)
 }
 
-// Render a tree of active items for one quadrant.
-// Non-active ancestors are shown as collapsible section headers.
-// Active items get the full edit controls.
-function renderActiveTree(topLevelItems) {
-  return topLevelItems
-    .filter(hasActive)
-    .map(item => renderTreeNode(item, 0))
-    .join('')
+function statusOpts(current) {
+  const statuses = ['todo', 'active', 'paused', 'done']
+  const labels   = { todo: 'TODO', active: 'ACTIVE', paused: 'PAUSE', done: 'DONE' }
+  return statuses.map(s =>
+    `<option value="${s}"${s === current ? ' selected' : ''}>${labels[s]}</option>`
+  ).join('')
 }
 
-function renderTreeNode(item, depth) {
-  const childHtml = (item.children || [])
+// Render one card per top-level task that has active tasks (self or descendants).
+function renderTaskCards(topLevelItems) {
+  return topLevelItems.filter(hasActive).map(renderTaskCard).join('')
+}
+
+function renderTaskCard(topItem) {
+  // If the top-level item itself is active, include it as the first row
+  const selfRow = topItem.status === 'active' ? renderActiveRow(topItem, 0, true) : ''
+
+  // Render active descendants as a tree
+  const childRows = (topItem.children || [])
     .filter(hasActive)
-    .map(c => renderTreeNode(c, depth + 1))
+    .map(child => renderTreeRow(child, 0))
+    .join('')
+
+  return `
+    <div class="popup-card">
+      <div class="popup-card-header">
+        <span class="popup-card-title">${esc(topItem.title)}</span>
+      </div>
+      <div class="popup-card-body">
+        ${selfRow}${childRows}
+      </div>
+    </div>`
+}
+
+// Recursively render active subtree within a card.
+// Non-active ancestors are shown as section labels (with indentation).
+// Active items get status selector + log textarea.
+function renderTreeRow(item, depth) {
+  const childRows = (item.children || [])
+    .filter(hasActive)
+    .map(child => renderTreeRow(child, depth + 1))
     .join('')
 
   if (item.status === 'active') {
-    return renderPopupItem(item, depth) + childHtml
+    return renderActiveRow(item, depth, false) + childRows
   } else {
-    // Non-active parent with active descendants — show as section header only
-    return `<div class="popup-tree-header" style="padding-left:${depth * 16}px">${esc(item.title)}</div>` + childHtml
+    // Non-active parent that has active children — show as section label
+    const indent = depth * 20
+    return `<div class="popup-subtree-label" style="margin-left:${indent}px">${esc(item.title)}</div>` + childRows
   }
 }
 
-function renderPopupItem(item, depth = 0) {
-  const statuses = ['todo', 'active', 'paused', 'done']
-  const labels   = { todo: 'TODO', active: 'ACTIVE', paused: 'PAUSE', done: 'DONE' }
-  const opts = statuses.map(s =>
-    `<option value="${s}"${s === item.status ? ' selected' : ''}>${labels[s]}</option>`
-  ).join('')
+// Render one active task row (status selector + log textarea).
+// isSelfRow: true when this is the top-level task itself being active
+function renderActiveRow(item, depth, isSelfRow) {
+  const indent = isSelfRow ? 0 : depth * 20
+  const cls    = depth > 0 ? 'popup-row popup-row-child' : 'popup-row'
   return `
-    <div class="popup-item" data-id="${esc(item.id)}" style="margin-left:${depth * 16}px">
-      <div class="popup-item-header">
-        <span class="item-title">${esc(item.title)}</span>
-        <select class="status-select" onchange="onStatusChange('${esc(item.id)}', this.value)">${opts}</select>
+    <div class="${cls}" data-id="${esc(item.id)}" style="margin-left:${indent}px">
+      <div class="popup-row-header">
+        <span class="popup-row-title">${isSelfRow ? '（整体进展）' : esc(item.title)}</span>
+        <select class="status-select" onchange="onStatusChange('${esc(item.id)}', this.value)">
+          ${statusOpts(item.status)}
+        </select>
       </div>
       <textarea class="log-input" rows="2"
         placeholder="今天做了什么？（留空则不记录）"
@@ -75,13 +104,15 @@ function renderPopupItem(item, depth = 0) {
     </div>`
 }
 
+// ── Status / log helpers ──────────────────────────────────────────────────────
+
 function onStatusChange(id, newStatus) {
   const data = getData()
   updateItemById(data, id, item => setStatus(item, newStatus))
   setData(data)
   if (newStatus !== 'active') {
-    const card = document.querySelector(`.popup-item[data-id="${id}"]`)
-    if (card) card.style.opacity = '0.5'
+    const row = document.querySelector(`.popup-row[data-id="${id}"]`)
+    if (row) row.style.opacity = '0.5'
   }
 }
 
