@@ -88,12 +88,21 @@ function renderTreeRow(item, depth) {
 // Render one active task row (status selector + log textarea).
 // isSelfRow: true when this is the top-level task itself being active
 function renderActiveRow(item, depth, isSelfRow) {
+  const cls = depth > 0 ? 'popup-row popup-row-child' : 'popup-row'
   const indent = isSelfRow ? 0 : depth * 20
-  const cls    = depth > 0 ? 'popup-row popup-row-child' : 'popup-row'
+  // Top-level item active: just a bare log textarea, no redundant header
+  if (isSelfRow) {
+    return `
+      <div class="${cls}" data-id="${esc(item.id)}">
+        <textarea class="log-input" rows="1"
+          placeholder="今天做了什么？（留空则不记录）"
+          data-id="${esc(item.id)}"></textarea>
+      </div>`
+  }
   return `
     <div class="${cls}" data-id="${esc(item.id)}" style="margin-left:${indent}px">
       <div class="popup-row-header">
-        <span class="popup-row-title">${isSelfRow ? '（整体进展）' : esc(item.title)}</span>
+        <span class="popup-row-title">${esc(item.title)}</span>
         <select class="status-select" onchange="onStatusChange('${esc(item.id)}', this.value)">
           ${statusOpts(item.status)}
         </select>
