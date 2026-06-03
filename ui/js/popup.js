@@ -6,13 +6,10 @@ function renderPopupQuadrants() {
   const data = getData()
 
   for (const key of ['main', 'side', 'fun']) {
-    const groups = collectActiveGrouped(data.quadrants[key].items)
+    const items = data.quadrants[key].items
     const container = document.getElementById('pq-items-' + key)
-    if (!groups.length) {
-      container.innerHTML = '<p class="empty">暂无进行中任务</p>'
-    } else {
-      container.innerHTML = groups.map(renderPopupGroup).join('')
-    }
+    const html = renderActiveTree(items)
+    container.innerHTML = html || '<p class="empty">暂无进行中任务</p>'
   }
 
   const dlItems = collectDeadlineItems(data)
@@ -30,46 +27,44 @@ function renderPopupQuadrants() {
   }
 }
 
-// Group active items by their top-level parent task.
-// Returns [{parentTitle, actives: [item, ...]}, ...]
-function collectActiveGrouped(topLevelItems) {
-  const groups = []
-  for (const top of topLevelItems) {
-    const actives = collectActiveFlat(top)
-    if (actives.length) {
-      groups.push({ parentTitle: top.title, actives })
-    }
+// Returns true if this item or any descendant is active.
+function hasActive(item) {
+  if (item.status === 'active') return true
+  return (item.children || []).some(hasActive)
+}
+
+// Render a tree of active items for one quadrant.
+// Non-active ancestors are shown as collapsible section headers.
+// Active items get the full edit controls.
+function renderActiveTree(topLevelItems) {
+  return topLevelItems
+    .filter(hasActive)
+    .map(item => renderTreeNode(item, 0))
+    .join('')
+}
+
+function renderTreeNode(item, depth) {
+  const childHtml = (item.children || [])
+    .filter(hasActive)
+    .map(c => renderTreeNode(c, depth + 1))
+    .join('')
+
+  if (item.status === 'active') {
+    return renderPopupItem(item, depth) + childHtml
+  } else {
+    // Non-active parent with active descendants — show as section header only
+    return `<div class="popup-tree-header" style="padding-left:${depth * 16}px">${esc(item.title)}</div>` + childHtml
   }
-  return groups
 }
 
-// Collect all active items at any depth within a subtree.
-function collectActiveFlat(item) {
-  const result = []
-  if (item.status === 'active') result.push(item)
-  for (const child of (item.children || [])) {
-    result.push(...collectActiveFlat(child))
-  }
-  return result
-}
-
-function renderPopupGroup(group) {
-  const itemsHtml = group.actives.map(renderPopupItem).join('')
-  return `
-    <div class="popup-group">
-      <div class="popup-group-label">${esc(group.parentTitle)}</div>
-      ${itemsHtml}
-    </div>`
-}
-
-function renderPopupItem(item) {
+function renderPopupItem(item, depth = 0) {
   const statuses = ['todo', 'active', 'paused', 'done']
   const labels   = { todo: 'TODO', active: 'ACTIVE', paused: 'PAUSE', done: 'DONE' }
   const opts = statuses.map(s =>
     `<option value="${s}"${s === item.status ? ' selected' : ''}>${labels[s]}</option>`
   ).join('')
   return `
-    <div class="popup-item" data-id="${esc(item.id)}">
+    <div class="popup-item" data-id="${esc(item.id)}" style="margin-left:${depth * 16}px">
       <div class="popup-item-header">
         <span class="item-title">${esc(item.title)}</span>
         <select class="status-select" onchange="onStatusChange('${esc(item.id)}', this.value)">${opts}</select>

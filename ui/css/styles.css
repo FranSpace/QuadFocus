@@ -709,6 +709,9 @@ button {
 
 /* ── Item hover controls ────────────────────────────────────────────────────── */
 
+/* Hide controls while title or description is being edited */
+.item.item-editing .item-controls { display: none !important; }
+
 .item-controls {
   display: none;
   align-items: center;
@@ -844,6 +847,17 @@ button {
   padding: 0 2px 4px;
   border-bottom: 1px solid var(--rule-med);
   margin-bottom: 6px;
+}
+/* Non-active ancestor shown as section label in popup tree */
+.popup-tree-header {
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  padding: 6px 4px 3px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 4px;
+  margin-top: 8px;
 }
 .popup-item {
   background: var(--surface);

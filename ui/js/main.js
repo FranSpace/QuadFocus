@@ -799,6 +799,8 @@ function startEditTitle(titleEl, id, quadrant, selectAll = false) {
     sel.removeAllRanges()
     sel.addRange(range)
   }
+  const itemEl = titleEl.closest('.item')
+  if (itemEl) itemEl.classList.add('item-editing')
 
   let saved = false
   function finish() {
@@ -806,6 +808,7 @@ function startEditTitle(titleEl, id, quadrant, selectAll = false) {
     saved = true
     titleEl.contentEditable = 'false'
     titleEl.classList.remove('editing')
+    if (itemEl) itemEl.classList.remove('item-editing')
     const newText = titleEl.textContent.trim()
     if (!newText) { titleEl.textContent = old; return }
     if (newText === old) return
@@ -821,6 +824,7 @@ function startEditTitle(titleEl, id, quadrant, selectAll = false) {
       saved = true
       titleEl.contentEditable = 'false'
       titleEl.classList.remove('editing')
+      if (itemEl) itemEl.classList.remove('item-editing')
       titleEl.textContent = old
     }
   })
@@ -834,7 +838,8 @@ function startEditDesc(descEl, id, quadrant) {
   descEl.textContent = old
   descEl.contentEditable = 'true'
   descEl.focus()
-  // Do NOT force cursor to end — let browser handle cursor position naturally
+  const itemEl = descEl.closest('.item')
+  if (itemEl) itemEl.classList.add('item-editing')
 
   let saved = false
   function finish() {
@@ -842,6 +847,7 @@ function startEditDesc(descEl, id, quadrant) {
     saved = true
     descEl.contentEditable = 'false'
     descEl.classList.remove('editing')
+    if (itemEl) itemEl.classList.remove('item-editing')
     const newText = descEl.textContent.trim()
     const data = getData()
     const item = findItemById(data.quadrants[quadrant].items, id)
@@ -859,6 +865,7 @@ function startEditDesc(descEl, id, quadrant) {
       saved = true
       descEl.contentEditable = 'false'
       descEl.classList.remove('editing')
+      if (itemEl) itemEl.classList.remove('item-editing')
       descEl.textContent = old
       if (!old) descEl.classList.add('item-desc-empty')
     }

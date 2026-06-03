@@ -3,29 +3,39 @@
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 
-// Returns the Monday (start of ISO week) for a given date.
+// Parse "YYYY-MM-DD" as LOCAL midnight to avoid UTC offset issues.
+// new Date("YYYY-MM-DD") is spec'd as UTC midnight and shifts the local
+// date in negative-offset timezones (UTC-x).
+function parseLocalDate(isoDate) {
+  const p = isoDate.split('-')
+  return new Date(+p[0], +p[1] - 1, +p[2])
+}
+
+// Returns the Monday (start of ISO week, Mon–Sun) for a given Date.
 function weekStart(d) {
+  const dow = (d.getDay() + 6) % 7   // Mon=0 … Sun=6
   const date = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  const day = date.getDay() || 7   // Sunday → 7, so Monday = 1
-  date.setDate(date.getDate() - day + 1)
+  date.setDate(date.getDate() - dow)
   return date
 }
 
 // Returns human-readable relative label for an ISO date string.
 // today param is optional; defaults to new Date() for production use.
 function relativeLabel(isoDate, today = new Date()) {
-  const target = new Date(isoDate)
-  const diff = daysDiff(midnight(today), midnight(target))
+  const target = parseLocalDate(isoDate)
+  const todayMid  = midnight(today)
+  const targetMid = midnight(target)
+  const diff = daysDiff(todayMid, targetMid)
 
   if (diff === 0) return '今天'
   if (diff === 1) return '明天'
-  if (diff < 0)  return isoDate.slice(5)   // past — just show MM-DD
+  if (diff < 0)  return isoDate.slice(5)   // past — show MM-DD
 
-  // Compare ISO week boundaries (Mon–Sun) to correctly handle
-  // cases like Sunday→Saturday (diff=6 but crosses into next week)
-  const ws0 = weekStart(today)
-  const ws1 = weekStart(target)
-  const weeksDiff = Math.round((ws1 - ws0) / (7 * 86400000))
+  // Compare ISO week boundaries (Mon–Sun) to avoid the diff≤6 edge case
+  // where e.g. Sunday+6days crosses into the next calendar week.
+  const weeksDiff = Math.round(
+    (weekStart(target) - weekStart(todayMid)) / (7 * 86400000)
+  )
 
   if (weeksDiff === 0) return `本周${WEEKDAYS[target.getDay()]}`
   if (weeksDiff === 1) return `下周${WEEKDAYS[target.getDay()]}`
@@ -34,7 +44,7 @@ function relativeLabel(isoDate, today = new Date()) {
 
 // Returns CSS urgency class name for a deadline ISO date string.
 function urgencyClass(isoDate, today = new Date()) {
-  const diff = daysDiff(midnight(today), midnight(new Date(isoDate)))
+  const diff = daysDiff(midnight(today), midnight(parseLocalDate(isoDate)))
   if (diff <= 1)  return 'urgency-critical'
   if (diff <= 6)  return 'urgency-week'
   if (diff <= 13) return 'urgency-next'
