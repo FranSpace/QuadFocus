@@ -88,29 +88,48 @@ function renderTreeRow(item, depth) {
 // Render one active task row (status selector + log textarea).
 // isSelfRow: true when this is the top-level task itself being active
 function renderActiveRow(item, depth, isSelfRow) {
-  const cls = depth > 0 ? 'popup-row popup-row-child' : 'popup-row'
+  const cls    = depth > 0 ? 'popup-row popup-row-child' : 'popup-row'
   const indent = isSelfRow ? 0 : depth * 20
-  // Top-level item active: just a bare log textarea, no redundant header
+
   if (isSelfRow) {
+    // Top-level item active: card header already shows title — just show a
+    // click-to-expand hint; textarea injected on click via openLog()
     return `
-      <div class="${cls}" data-id="${esc(item.id)}">
-        <textarea class="log-input" rows="1"
-          placeholder="今天做了什么？（留空则不记录）"
-          data-id="${esc(item.id)}"></textarea>
+      <div class="${cls} popup-row-tap" data-id="${esc(item.id)}"
+           onclick="openLog(this,event)">
+        <span class="popup-log-hint">+ 点击记录整体进展</span>
       </div>`
   }
   return `
-    <div class="${cls}" data-id="${esc(item.id)}" style="margin-left:${indent}px">
+    <div class="${cls} popup-row-tap" data-id="${esc(item.id)}"
+         style="margin-left:${indent}px" onclick="openLog(this,event)">
       <div class="popup-row-header">
         <span class="popup-row-title">${esc(item.title)}</span>
-        <select class="status-select" onchange="onStatusChange('${esc(item.id)}', this.value)">
+        <span class="popup-log-hint">+ 记录</span>
+        <select class="status-select" onchange="onStatusChange('${esc(item.id)}',this.value)">
           ${statusOpts(item.status)}
         </select>
       </div>
-      <textarea class="log-input" rows="1"
-        placeholder="今天做了什么？（留空则不记录）"
-        data-id="${esc(item.id)}"></textarea>
     </div>`
+}
+
+// Click on a row → inject textarea and focus it.
+// Subsequent clicks just focus the existing textarea.
+function openLog(rowEl, e) {
+  if (e.target.closest('.status-select, .log-input')) return
+  let ta = rowEl.querySelector('.log-input')
+  if (ta) { ta.focus(); return }
+
+  // Hide the hint
+  const hint = rowEl.querySelector('.popup-log-hint')
+  if (hint) hint.remove()
+
+  ta = document.createElement('textarea')
+  ta.className  = 'log-input'
+  ta.rows       = 2
+  ta.dataset.id = rowEl.dataset.id
+  rowEl.appendChild(ta)
+  ta.focus()
 }
 
 // ── Status / log helpers ──────────────────────────────────────────────────────
